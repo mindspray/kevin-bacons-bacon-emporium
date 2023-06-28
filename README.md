@@ -1,2 +1,2 @@
-# odins-diner
-A single page site for a restaurant
+# kevin-bacons-bacon-emporium
+Everything has bacon, even the water!
