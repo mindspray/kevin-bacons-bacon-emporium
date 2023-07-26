@@ -6,9 +6,9 @@ import { createTabNav } from './tabs.js';
 createTabNav();
 loadHome();
 
-let homeTab = document.querySelector('.homeTab');
-let menuTab = document.querySelector('.menuTab');
-let contactTab = document.querySelector('.contactTab');
+let homeTab = document.getElementById('home-tab');
+let menuTab = document.getElementById('menu-tab');
+let contactTab = document.getElementById('contact-tab');
 
 homeTab.addEventListener('click', loadHome);
 menuTab.addEventListener('click', loadMenu);

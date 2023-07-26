@@ -1,32 +1,59 @@
-let loadContact = function() {
+import { createElementFromBlueprint } from "./tools";
+
+const text = {
+  title: "Contact us",
+  contact: "Want to reach us? Call (555) 123-4567"
+}
+
+/* 
+  TEMPLATE:
+  DOMElement_assetKey: {
+    count: number of elements to produce
+    classes: ["array", "of", "classes"]
+    text: a string, an array of strings, or array of objects with string entries.
+    children: { Another DOM Template }
+  }
+*/
+const blueprint = {
+  h1_title: {
+    classes: ['contact-title'],
+    text: text.title
+  },
+  div_contactImgBox: {
+    classes: ['contact-image-box'],
+    children: {
+      img_contactImg: {
+        classes: ['contact-image'],
+        src: './images/contact.png'
+      },
+    }
+  },
+  p_contact: {
+    classes: ['contact'],
+    text: text.contact
+  }
+}
+
+let contactPage;
+
+const loadContact = function() {
   let content = document.getElementById('content');
   let existingContainer = document.querySelector('.container');
-  let container;
-  
-  // Problem -- The container is being added multiple times. Container should be made once at a higher level, or checked in every file (higher level seems to me more in line with DRY). The directions said to handle tab switching in index
 
   const buildPage = function(){
-    container = document.createElement('div');
-    container.classList.add('container');
-    let title = document.createElement('h1');
-    title.textContent = "Contact us";
-    
-    let hero = document.createElement('img');
-    hero.src = 'https://picsum.photos/600/200'
-    
-    let para = document.createElement('p');
-    para.textContent = "Want to reach us? Call (555) 123-4567"
-    
-    container.append(title, hero, para);
+    const contactContainer = createElementFromBlueprint(blueprint);
+    return contactContainer;
   };
 
-  if(!existingContainer){
-    buildPage();
-    content.append(container);
+  if (!contactPage){
+    contactPage = buildPage();
+  }
+
+  if (!existingContainer){
+    content.append(menuPage);
   } else {
-    buildPage();
     content.removeChild(existingContainer);
-    content.append(container);
+    content.append(contactPage);
   }
 }
 

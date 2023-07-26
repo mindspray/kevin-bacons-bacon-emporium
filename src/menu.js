@@ -1,7 +1,6 @@
-import { buildBlueprint,createElementFromBlueprint, objToArray } from "./tools"
+import { createElementFromBlueprint } from "./tools"
 
-// in optimal order
-let text = {
+const text = {
   "menu": "The Baconorium Menu",
   "appetizers": [
     {
@@ -17,8 +16,8 @@ let text = {
       "description": "Prepare for an explosive flavor experience with these loaded skins, each one a blockbuster of bacon goodness."
     },
      {
-      "name": "Hollywood Star-Wrapped Asparagus",
-      "description": "These bacon-wrapped divas of the vegetable world will grace your palate with their savory allure."
+      "name": "Bacon-Wrapped Asparagus Stars",
+      "description": "These asparagus stars are wrapped in bacon, dancing their way onto your plate with delicious flair."
     },
      {
       "name": "Red-Carpet Nacho Extravaganza",
@@ -49,8 +48,8 @@ let text = {
   ],
   "sides": [
     {
-      "name": "Bacon-Wrapped Asparagus Stars",
-      "description": "These asparagus stars are wrapped in bacon, dancing their way onto your plate with delicious flair."
+      "name": "Bacon Bliss Bombs",
+      "description": "Irresistible bacon-wrapped cheddar and jalapeño bites baked to crispy perfection, served with a zesty chipotle dipping sauce."
     },
     {
       "name": "The Bacon Connection Mac 'n' Cheese",
@@ -71,21 +70,48 @@ let text = {
   ]
 }
 
-/* Adding a children: key to the blueprint keys' keys objects would cause a lot of redundencies.
-*/
-// Not in optimal order
-
-let menuItem = {
-  _count: 5,
-  number: { hasText: true},
-  name: { hasText: true},
-  description: {hasText: true}
+const images = {
+  app: [
+    '01.png',
+    '02.png',
+    '03.png',
+    '04.png',
+    '05.png'
+  ],
+  entree: [
+    '01.png',
+    '02.png',
+    '03.png',
+    '04.png',
+    '05.png'
+  ],
+  side: [
+    '01.png',
+    '02.png',
+    '03.png',
+    '04.png',
+    '05.png'
+  ]
 }
 
+/* 
+  TEMPLATE:
+  DOMElement_assetKey: {
+    count: number of elements to produce
+    classes: ["array", "of", "classes"]
+    text: a string, an array of strings, or array of objects with string entries.
+    href: a string, an array of strings, or array of objects with string entries containing links.
+    children: { Another DOM Template }
+  }
+*/
 const blueprint = {
   h1_menu: {
     classes: ["menu-title"],
     "text": text.menu
+  },
+  h2_appSectionTitle: {
+    classes: ["section-title"],
+    text: 'Appetizers'
   },
   ul_appetizers: {
     classes: ["menu-section"],
@@ -94,6 +120,17 @@ const blueprint = {
         count: 5,
         classes: ["menu-item"],
         children: {
+          div_imageBox: {
+            classes: ["item-picture-box"],
+            carryParentCount: true,
+            children: {
+              img_menuImages:{
+                classes: ['item-picture'],
+                srcRoot: 'app',
+                src: images.app
+              }
+            }
+          },
           span_number: {
             classes: ["item-number"],
             "text": ['1','2','3','4','5']
@@ -109,6 +146,10 @@ const blueprint = {
         },
       },
     },
+  },
+  h2_entreeSectionTitle: {
+    classes: ["section-title"],
+    text: 'Entrees'
   },
   ul_entrees: {
     classes: ["menu-section"],
@@ -117,11 +158,21 @@ const blueprint = {
         count: 5,
         classes: ["menu-item"],
         children: {
+          div_imageBox: {
+            classes: ["item-picture-box"],
+            carryParentCount: true,
+            children: {
+              img_menuImages:{
+                classes: ['item-picture'],
+                srcRoot: 'entree',
+                src: images.entree
+              }
+            }
+          },
           span_number: {
             classes: ["item-number"],
             "text": ['1','2','3','4','5']
           },
-          
           p_name: {
             classes: ["item-name"],
             "text": text.entrees
@@ -134,6 +185,10 @@ const blueprint = {
       },
     },
   },
+  h2_sideSectionTitle: {
+    classes: ["section-title"],
+    text: 'Sides'
+  },
   ul_sides: {
     classes: ["menu-section"],
     children: {
@@ -141,6 +196,17 @@ const blueprint = {
         count: 5,
         classes: ["menu-item"],
         children: {
+          div_imageBox: {
+            classes: ["item-picture-box"],
+            carryParentCount: true,
+            children: {
+              img_menuImages:{
+                classes: ['item-picture'],
+                srcRoot: 'side',
+                src: images.side
+              }
+            }
+          },
           span_number: {
             classes: ["item-number"],
             "text": ['1','2','3','4','5']
@@ -159,79 +225,21 @@ const blueprint = {
   },
 };
 
-let elementsObj = {}
+let menuPage;
 
-let blueprintCopy = {...blueprint};
+const loadMenu = function(){
+  const content = document.getElementById('content');
+  const existingContainer = document.querySelector('.container');
+  
+  const buildPage = function(){
+    const menuContainer = createElementFromBlueprint(blueprint);
+  
+    return menuContainer;
+  }
 
-const buildPage = function(){
-  const menuContainer = createElementFromBlueprint(blueprintCopy);
-  // document.body.appendChild(menuContainer);
-
-  return menuContainer;
-}
-
-let loadMenu = function(){
-  let content = document.getElementById('content');
-  let existingContainer = document.querySelector('.container');
-
-  let testThing = objToArray(text);
-  console.log(testThing);
-  // const buildPage = function(){
-
-    // console.log("Building menu");
-
-    // fsdgs
-    // elementsObj = buildBlueprint(menuBlueprint, text);
-    // console.log(elementsObj);
-
-    // console.log(elementsObj)
-    // sgsdgd
-
-    // container = document.createElement('div');
-    // let title = document.createElement('h1');
-    // elementsObj.menu.textContent = "Menu"
-
-    // let menu = document.createElement('div');
-    // container.classList.add('container');
-    // let menuItems = [];
-    // let sectionCount = -1;
-    // let dishTypes = Object.keys(text);
-    // for(let i = 0; i < 15; i++){
-      // let newDiv = document.createElement('div');
-      // let cornerNumber = document.createElement('p');
-      // let dishNumber = (i%5)+1
-      // cornerNumber.textContent = `${dishNumber}`;
-      // if(dishNumber === 1){
-      //   sectionCount++;
-      //   let blankDiv = document.createElement('div');
-      //   blankDiv.classList.add('spacer');
-      //   menuItems.push(blankDiv);
-        
-      //   let dishType = document.createElement('h2');
-      //   dishType.innerText = dishTypes[sectionCount].toUpperCase();
-      //   menuItems.push(dishType);
-      // }
-      // let currentDish = text[dishTypes[sectionCount]][`${dishNumber}`];
-      // let dishName = document.createElement('p');
-      // let dishDescrip = document.createElement('p');
-      // dishName.textContent = currentDish.name;
-      // dishDescrip.textContent = currentDish.description;
-
-      // newDiv.append(cornerNumber, dishName, dishDescrip);
-
-      // let image = document.createElement('img');
-      // image.src = 'https://picsum.photos/100/100'
-
-      // let title = document.createElement('h3');
-      // title.textContent = "a dish";
-
-      // menuItems.push(newDiv);
-    // }
-    // menuItems.forEach((item) => menu.append(item));
-    // container.append(title, menu);
-  // }
-
-  let menuPage = buildPage();
+  if (!menuPage) {
+    menuPage = buildPage();
+  }
 
   if (!existingContainer){
     content.append(menuPage);

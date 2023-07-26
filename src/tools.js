@@ -32,17 +32,34 @@ let arrayToObj = function (arr){
 }
 
 
-function createElements(element, classes, count = 1, curIndex = 0, text, textKey){
+function createElements(element, details, index, assetKey, parentBlueprint){
+  let ids = details.ids;
+  let classes = details.classes;
+  let count = details.count || 1;
+  let text = details.text;
+  let images = details.src;
+  let curIndex = index.curIndex;
+  let carriedIndex = index.carriedIndex;
+  
+  let links = details.href;
+
   let elements = [];
 
-  // if (!(Array.isArray(text)) && typeof text[0] === 'object'){
-  //   text[]
-  // }
+  /* IMPORTANT NOTE REGARDING TEMPLATE:
+    Be sure the textObjects or hrefObjects use the assetKey as the key for the corresponding blueprint object.
+  */
 
-  // I suspect there is a problem with this count variable. I am trying to increment on each name and description object, but the count variable for those individual objects is 1 while the real count is on the parent object. Maybe use text array length instead, if it's an array, and if not use 1?
   for (let i = 0; i < count; i++){
     let el = document.createElement(element);
     el.classList.add(...classes);
+
+    if(ids){
+      if(typeof ids === 'string'){
+        el.id = ids;
+      } else if (Array.isArray(ids) && typeof ids[0] === 'string'){
+        el.id = ids[curIndex];
+      }
+    }
 
     if(text){
       if (typeof text === 'string'){
@@ -51,7 +68,34 @@ function createElements(element, classes, count = 1, curIndex = 0, text, textKey
         el.textContent = text[curIndex];
       } else if (Array.isArray(text) && typeof text[0] === 'object'){
         let textObj = text[curIndex];
-        el.textContent = textObj[textKey];
+        el.textContent = textObj[assetKey];
+      }
+    }
+
+    if (images){
+      let imagesRoot = details.srcRoot;
+      let imagesPath = `./images/${imagesRoot}-images/${imagesRoot}-${images[carriedIndex]}`;
+      let imagesThumbPath = `images/thumb-${curIndex}.png`
+
+      console.log({images});
+
+      if (typeof images === 'string'){
+        el.src = images;
+      } else if (Array.isArray(images) && typeof images[0] === 'string') {
+        el.src = `${imagesPath}`;
+      } else if (Array.isArray(images) && typeof images[0] === 'object'){
+        el.src = `${imagesPath}`;
+      }
+    }
+
+    if (links){
+      if (typeof links === 'string'){
+        el.src = links;
+      } else if (Array.isArray(links) && typeof links[0] === 'string'){
+        el.src = links[curIndex];
+      } else if (Array.isArray(links) && typeof links[0] === 'object'){
+        let linksObj = links[curIndex];
+        el.src = linksObj[assetKey];
       }
     }
 
@@ -61,18 +105,29 @@ function createElements(element, classes, count = 1, curIndex = 0, text, textKey
   return elements;
 }
 
-function createElementFromBlueprint(blueprint) {
+function createElementFromBlueprint(blueprint, {containerType = "div", className = "nonegiven"} = {}) {
 
-  function createNestedElements(elementBlueprint,element, curIndex) {
+  function createNestedElements(elementBlueprint,element, curIndex, carriedIndex) {
     Object.keys(elementBlueprint).forEach((key, index) => {
       const elementName = key.split('_')[0];
-      const textKey = key.split('_')[1];
+      const assetKey = key.split('_')[1];
       const elementDetails = elementBlueprint[key];
-      const newElementsArray = createElements(elementName, elementDetails.classes, elementDetails.count, curIndex, elementDetails.text, textKey);
+
+      let newElementsArray;
+      if (carriedIndex != undefined){
+        newElementsArray = createElements(elementName, elementDetails, {curIndex, carriedIndex}, assetKey, elementBlueprint);
+      } else {
+
+        newElementsArray = createElements(elementName, elementDetails, {curIndex}, assetKey, elementBlueprint);
+      }
 
       newElementsArray.forEach((newElement, index)=> {
         if (elementDetails.children) {
-          createNestedElements(elementDetails.children, newElement, index);
+          if (elementDetails.carryParentCount){
+            createNestedElements(elementDetails.children, newElement, index, curIndex);
+          } else {
+            createNestedElements(elementDetails.children, newElement, index);
+          }
         }
   
         element.appendChild(newElement);
@@ -81,104 +136,35 @@ function createElementFromBlueprint(blueprint) {
     })
   }
 
-  const container = document.createElement('div');
-  container.classList.add('container');
+  let container;
+
+  if (containerType === "container" || containerType === "div"){
+    container = document.createElement('div');
+    if (className === "nonegiven") {
+      container.classList.add('container');
+    }
+  } else if (containerType === "header"){
+    container = document.createElement('header');
+    if(className === "nonegiven") {
+      container.classList.add('header');
+    }
+  }else if (containerType === "footer"){
+    container = document.createElement('footer');
+    if(className === "nonegiven") {
+      container.classList.add('footer');
+    }
+  }else if (containerType === "section"){
+    container = document.createElement('section');
+    if(className === "nonegiven") {
+      container.classList.add('section');
+    }
+  }
+
+  if (!(className === "nonegiven")){
+    container.classList.add(className);
+  }
   createNestedElements(blueprint, container);
   return container;
 }
 
-// // Call the function with the provided blueprint
-// const menuContainer = createElementFromBlueprint(blueprint);
-
-// // Append the created elements to the document body
-// document.body.appendChild(menuContainer);
-
-
-let buildBlueprint = function (pageBlueprint, textObj) {
-  let elements = {};
-  let textArr = objToArray(textObj);
-  console.log(textArr);
-
-  // let trimmedTextObj = arrayToObj(textArr);
-  // console.log(trimmedTextObj);
-
-  // ["div", "h1", ...]
-  let blueprintKeys = Object.keys(pageBlueprint);
-
-  blueprintKeys.forEach((blueprintKey) => {
-    // ["container", "menuBox", "spacer", ...]
-    let blueprintKeyKeys = Object.keys(pageBlueprint[blueprintKey]);
-
-    blueprintKeyKeys.forEach((blueprintKeyKey) => {
-      // { count: 15, hasText: true }
-      let blueprintKeyKeyValue = pageBlueprint[blueprintKey][blueprintKeyKey];
-
-      let count = blueprintKeyKeyValue.count ? blueprintKeyKeyValue.count : 1;
-      let el;
-      
-      console.log(`creating ${count} ${blueprintKey}'s`);
-      for(let i = 1; i <= count; i++){
-        console.log(`round ${i}: ${blueprintKeyKey}`);
-        el = document.createElement(blueprintKey);
-        el.classList.add(blueprintKeyKey);
-        el.classList.add(`${i}`);
-
-        
-        if (blueprintKeyKeyValue.hasText){
-          /* I want to be able to pass in a string like "menu" or "name", or "description" coming from the pageBlueprint. That string should be a key to a value in textObj.
-          
-          Problem is, that string matches multiple keys.
-
-          Can I make the string more specific?
-           */
-          el.textContent = textArr[textArr.indexOf(blueprintKeyKey)]
-        }
-        if (blueprintKeyKeyValue.isCounter) el.textContent = `${i}`;
-
-        /* Maybe the opposite route? Search the textObj, and then assign its strings to element.textContents */
-
-        /* What is it that I want to ultimately end up doing? I want to be able to take a blueprint object, generate the right format and number of elements. The object keys are element types, the keys' keys are class names.
-        
-        Problem is object are unique, however since I'm making multiple elements, the class names will be non unique.
-
-        Object hold unique key names.
-        Objects can hold multiple objects with the same key names.
-
-        I am using the object to build multiple objects with the same name however. (p.name, p.name, p.name)
-
-        Either I use this blueprint to create an object with unique numbered keys, or maybe an object with array 'key key values'. Or create an array of all the objects (tried this, very sloppy). Once I have an object of all unique names though, the problem transfers to the textObject. That object has multiple objects with the same keys inside it. So far I've created an array of all of it [["menu", "Menu"], ["name", "Bacon thing"], ["description", "has Bacon"],...]
-        
-        I then have
-        
-        */
-
-        if (blueprintKeyKeyValue.count > 1) {
-          elements[`${blueprintKeyKey}${i}`] = el;
-        }
-        else {
-          elements[`${blueprintKeyKey}`] = el;
-        }
-      }
-
-    });
-  });
-  
-  // return an object with keys that match first level blueprint keys (container..),so elements.container returns the 'container' div element 
-  return elements;
-};
-
-// const addContents = function(elementsAndBP, obj){
-//   Object.values(elementsAndBP).forEach(element => {
-//     if (element.hasText){
-//       console.log(`${element} has text`);
-//     }
-//   })
-
-//   Object.keys(elementsAndBP).forEach(elementName => {
-//     if (Object.keys(obj).includes(elementName)){
-//       elementsAndBP[elementName].textContent = obj[elementName];
-//     }
-//   })
-// }
-
-export { buildBlueprint, createElementFromBlueprint, objToArray };
+export { createElementFromBlueprint, objToArray };
